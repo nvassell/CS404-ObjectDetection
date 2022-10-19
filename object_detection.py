@@ -19,8 +19,9 @@ def main():
     # SiftFlann(img1, img2, img3)
     # BriskFlann(img1, img2, img3)
     # OrbFlann(img1, img2, img3)
-    SiftBF(img1, img2, img3)
-    OrbBF(img1, img2, img3)
+    # SiftBF(img1, img2, img3)
+    # OrbBF(img1, img2, img3)
+    BriskBF(img1, img2, img3)
 
 
 def SiftFlann(img1, img2, img3):
@@ -158,6 +159,42 @@ def SiftBF(img1, img2, img3):
     # Save the images :)
     cv.imwrite("src/BFSift1.jpg", image1_2)
     cv.imwrite("src/BFSift2.jpg", image1_3)
+
+def BriskBF(img1, img2, img3):
+    orbKeypoints1, orbDescriptorsImg1 = getOrbKeypointsAndDescriptors(img1)
+    orbKeypoints2, orbDescriptorsImg2 = getOrbKeypointsAndDescriptors(img2)
+    orbKeypoints3, orbDescriptorsImg3 = getOrbKeypointsAndDescriptors(img3)
+
+    # create BFMatcher object
+    bf = cv.BFMatcher()
+
+    # Match descriptors.]
+    matches1_2 = bf.knnMatch(orbDescriptorsImg1, orbDescriptorsImg2, k=2)
+    matches1_3 = bf.knnMatch(orbDescriptorsImg1, orbDescriptorsImg3, k=2)
+
+    ratio_thresh = .9
+
+    #Matching on images 1 and 2.
+    good_matches1_2 = []
+    for m,n in matches1_2:
+        if m.distance < ratio_thresh * n.distance:
+            good_matches1_2.append(m)
+
+    #Matching on images 1 and 3.
+    good_matches1_3 = []
+    for m,n in matches1_3:
+        if m.distance < ratio_thresh * n.distance:
+            good_matches1_3.append(m)
+
+    img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
+    img_matches1_3 = np.empty((max(img1.shape[0], img3.shape[0]), img1.shape[1]+img3.shape[1], 3), dtype=np.uint8)
+
+    cv.drawMatches(img1, orbKeypoints1, img2, orbKeypoints2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    cv.drawMatches(img1, orbKeypoints1, img3, orbKeypoints3, good_matches1_3, img_matches1_3, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    # save matched images
+    cv.imwrite("src/BriskBF1.jpg", img_matches1_2)
+    cv.imwrite("src/BriskBF2.jpg", img_matches1_3)
+
 
 def OrbBF(img1, img2, img3):
     orbKeypoints1, orbDescriptorsImg1 = getOrbKeypointsAndDescriptors(img1)
