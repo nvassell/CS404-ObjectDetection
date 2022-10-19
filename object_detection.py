@@ -3,6 +3,11 @@ from cv2 import drawKeypoints
 
 import numpy as np
 
+def main():
+    SIFT()
+    BRISK()
+    FAST()
+
 def SIFT():
     img = cv.imread("src/ball1.jpg")
     imggray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -37,9 +42,5 @@ def FAST():
     cv.imwrite("src/ball1FAST.jpg", img)
     cv.waitKey();
 
-SIFT()
-BRISK()
-FAST()
-#blob()
-# Harris()
-# Orb()
+if __name__ == "__main__":
+    main()
