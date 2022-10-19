@@ -20,6 +20,7 @@ def main():
     # BriskFlann(img1, img2, img3)
     # OrbFlann(img1, img2, img3)
     SiftBF(img1, img2, img3)
+    OrbBF(img1, img2, img3)
 
 
 def SiftFlann(img1, img2, img3):
@@ -157,6 +158,32 @@ def SiftBF(img1, img2, img3):
     # Save the images :)
     cv.imwrite("src/BFSift1.jpg", image1_2)
     cv.imwrite("src/BFSift2.jpg", image1_3)
+
+def OrbBF(img1, img2, img3):
+    orbKeypoints1, orbDescriptorsImg1 = getOrbKeypointsAndDescriptors(img1)
+    orbKeypoints2, orbDescriptorsImg2 = getOrbKeypointsAndDescriptors(img2)
+    orbKeypoints3, orbDescriptorsImg3 = getOrbKeypointsAndDescriptors(img3)
+
+    # create BFMatcher object
+    bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=True)
+
+    # Match descriptors.]
+    matches1_2 = bf.match(orbDescriptorsImg1, orbDescriptorsImg2)
+    matches1_3 = bf.match(orbDescriptorsImg1, orbDescriptorsImg3)
+
+    # Sort them in the order of their distance.
+    matches1_2 = sorted(matches1_2, key = lambda x:x.distance)
+    matches1_3 = sorted(matches1_3, key = lambda x:x.distance)
+
+    # Draw first 10 matches.
+    image1_2 = cv.drawMatches(img1,orbKeypoints1,img2,orbKeypoints2,matches1_2[:20],None,flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    image1_3 = cv.drawMatches(img1,orbKeypoints1,img3,orbKeypoints3,matches1_3[:20],None,flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+
+
+    # Draw the images
+    cv.imwrite("src/BFOrb1.jpg", image1_2)
+    cv.imwrite("src/BFOrb2.jpg", image1_2)
+
 
 
 def GetSIFTKeypointsAndDescriptors(img):
