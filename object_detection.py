@@ -16,11 +16,11 @@ def main():
     img2 = cv.imread("src/ball2.jpg")
     img3 = cv.imread("src/ball3.jpg")
 
-    # SiftFlann(img1, img2, img3)
-    # BriskFlann(img1, img2, img3)
-    # OrbFlann(img1, img2, img3)
-    # SiftBF(img1, img2, img3)
-    # OrbBF(img1, img2, img3)
+    SiftFlann(img1, img2, img3)
+    BriskFlann(img1, img2, img3)
+    OrbFlann(img1, img2, img3)
+    SiftBF(img1, img2, img3)
+    OrbBF(img1, img2, img3)
     BriskBF(img1, img2, img3)
 
 
@@ -36,26 +36,26 @@ def SiftFlann(img1, img2, img3):
     knn_matches1_3 = FLANNmatcher.knnMatch(siftDescriptorsImg1, siftDescriptorsImg3, 2)
     ratio_thresh = 0.7
     
-    # Matching on images 1 and 2
+    # Descriptor matching
     good_matches1_2 = []
     for m,n in knn_matches1_2:
         if m.distance < ratio_thresh * n.distance:
             good_matches1_2.append(m)
-    
-    img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
-    cv.drawMatches(img1, siftKeypointsImg1, img2, siftKeypointsImg2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    # save matched images
-    cv.imwrite("src/FlannSift1.jpg", img_matches1_2)
 
-    # Matching on images 1 and 3
     good_matches1_3 = []
     for m,n in knn_matches1_3:
         if m.distance < ratio_thresh * n.distance:
             good_matches1_3.append(m)
 
+    img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
     img_matches1_3 = np.empty((max(img1.shape[0], img3.shape[0]), img1.shape[1]+img3.shape[1], 3), dtype=np.uint8)
+
+    # Draw the lines.
+    cv.drawMatches(img1, siftKeypointsImg1, img2, siftKeypointsImg2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     cv.drawMatches(img1, siftKeypointsImg1, img3, siftKeypointsImg3, good_matches1_3, img_matches1_3, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    # save matched images
+    
+    # Save matched images.
+    cv.imwrite("src/FlannSift1.jpg", img_matches1_2)
     cv.imwrite("src/FlannSift2.jpg", img_matches1_3)
 
 
@@ -72,31 +72,30 @@ def BriskFlann(img1, img2, img3):
 
     FLANNmatcher = cv.DescriptorMatcher_create(cv.DescriptorMatcher_FLANNBASED)
 
-    knn_matches1_2 = FLANNmatcher.knnMatch(briskDescriptorsImg1, briskDescriptorsImg2, 2)
-    knn_matches1_3 = FLANNmatcher.knnMatch(briskDescriptorsImg1, briskDescriptorsImg3, 2)
+    matches1_2 = FLANNmatcher.knnMatch(briskDescriptorsImg1, briskDescriptorsImg2, 2)
+    matches1_3 = FLANNmatcher.knnMatch(briskDescriptorsImg1, briskDescriptorsImg3, 2)
 
-    ratio_thresh = 0.7
+    ratio_thresh = 0.8
 
-    #Matching on images 1 and 2.
+    #Descriptor matching
     good_matches1_2 = []
-    for m,n in knn_matches1_2:
+    good_matches1_3 = []
+    for m,n in matches1_2:
         if m.distance < ratio_thresh * n.distance:
             good_matches1_2.append(m)
 
-    img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
-    cv.drawMatches(img1, briskKeypointsImg1, img2, briskKeypointsImg2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    # save matched images
-    cv.imwrite("src/FlannBrisk1.jpg", img_matches1_2)
-
-    #Matching on images 1 and 3.
-    good_matches1_3 = []
-    for m,n in knn_matches1_3:
+    for m,n in matches1_3:
         if m.distance < ratio_thresh * n.distance:
             good_matches1_3.append(m)
 
+    img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
     img_matches1_3 = np.empty((max(img1.shape[0], img3.shape[0]), img1.shape[1]+img3.shape[1], 3), dtype=np.uint8)
+
+    cv.drawMatches(img1, briskKeypointsImg1, img2, briskKeypointsImg2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     cv.drawMatches(img1, briskKeypointsImg1, img3, briskKeypointsImg3, good_matches1_3, img_matches1_3, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    
     # save matched images
+    cv.imwrite("src/FlannBrisk1.jpg", img_matches1_2)
     cv.imwrite("src/FlannBrisk2.jpg", img_matches1_3)
 
 
@@ -111,31 +110,31 @@ def OrbFlann(img1, img2, img3):
 
     FLANNmatcher = cv.DescriptorMatcher_create(cv.DescriptorMatcher_FLANNBASED)
 
-    knn_matches1_2 = FLANNmatcher.knnMatch(orbDescriptorsImg1, orbDescriptorsImg2, 2)
-    knn_matches1_3 = FLANNmatcher.knnMatch(orbDescriptorsImg1, orbDescriptorsImg3, 2)
+    matches1_2 = FLANNmatcher.knnMatch(orbDescriptorsImg1, orbDescriptorsImg2, 2)
+    matches1_3 = FLANNmatcher.knnMatch(orbDescriptorsImg1, orbDescriptorsImg3, 2)
 
-    ratio_thresh = 0.7
+    ratio_thresh = 0.9
 
     #Matching on images 1 and 2.
     good_matches1_2 = []
-    for m,n in knn_matches1_2:
+    good_matches1_3 = []
+    for m,n in matches1_2:
         if m.distance < ratio_thresh * n.distance:
             good_matches1_2.append(m)
-
-    img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
-    cv.drawMatches(img1, orbKeypoints1, img2, orbKeypoints2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    # save matched images
-    cv.imwrite("src/OrbFlann1.jpg", img_matches1_2)
-
-    #Matching on images 1 and 3.
-    good_matches1_3 = []
-    for m,n in knn_matches1_3:
+    
+    for m,n in matches1_3:
         if m.distance < ratio_thresh * n.distance:
             good_matches1_3.append(m)
 
+
+    img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
     img_matches1_3 = np.empty((max(img1.shape[0], img3.shape[0]), img1.shape[1]+img3.shape[1], 3), dtype=np.uint8)
+
+    cv.drawMatches(img1, orbKeypoints1, img2, orbKeypoints2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     cv.drawMatches(img1, orbKeypoints1, img3, orbKeypoints3, good_matches1_3, img_matches1_3, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+
     # save matched images
+    cv.imwrite("src/OrbFlann1.jpg", img_matches1_2)
     cv.imwrite("src/OrbFlann2.jpg", img_matches1_3)
 
 def SiftBF(img1, img2, img3):
