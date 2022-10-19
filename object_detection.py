@@ -1,5 +1,7 @@
 """
 Flann based matching - https://docs.opencv.org/3.4/d5/d6f/tutorial_feature_flann_matcher.html
+BF base matching - https://docs.opencv.org/4.x/dc/dc3/tutorial_py_matcher.html
+More feature matching - https://opencv24-python-tutorials.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_matcher/py_matcher.html
 """
 
 import cv2 as cv
@@ -15,8 +17,8 @@ def main():
     img3 = cv.imread("src/ball3.jpg")
 
     # SiftFlann(img1, img2, img3)
-    BriskFlann(img1, img2, img3)
-
+    # BriskFlann(img1, img2, img3)
+    OrbFlann(img1, img2, img3)
 
 
 def SiftFlann(img1, img2, img3):
@@ -55,7 +57,7 @@ def SiftFlann(img1, img2, img3):
 
 
 def BriskFlann(img1, img2, img3):
-    # get imagge keypoints and descriptors with Brisk.
+    # get image keypoints and descriptors with Brisk.
     briskKeypointsImg1, briskDescriptorsImg1 = getBRISKKeypointsAndDesciptors(img1)
     briskKeypointsImg2, briskDescriptorsImg2 = getBRISKKeypointsAndDesciptors(img2)
     briskKeypointsImg3, briskDescriptorsImg3 = getBRISKKeypointsAndDesciptors(img3)
@@ -95,33 +97,43 @@ def BriskFlann(img1, img2, img3):
     cv.imwrite("src/FlannBrisk2.jpg", img_matches1_3)
 
 
+def OrbFlann(img1, img2, img3):
+    orbKeypoints1, orbDescriptorsImg1 = getOrbKeypointsAndDescriptors(img1)
+    orbKeypoints2, orbDescriptorsImg2 = getOrbKeypointsAndDescriptors(img2)
+    orbKeypoints3, orbDescriptorsImg3 = getOrbKeypointsAndDescriptors(img3)
 
-    # result1 = cv.drawKeypoints(img1, briskKeypointsImg1, None)
-    # cv.imshow("Brisk", result1)
-    # cv.waitKey()
+    orbDescriptorsImg1 = np.float32(orbDescriptorsImg1)
+    orbDescriptorsImg2 = np.float32(orbDescriptorsImg2)
+    orbDescriptorsImg3 = np.float32(orbDescriptorsImg3)
 
-    
-    # # Matching on images 1 and 2
-    # good_matches1_2 = []
-    # for m,n in knn_matches1_2:
-    #     if m.distance < ratio_thresh * n.distance:
-    #         good_matches1_2.append(m)
-    # img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
-    # cv.drawMatches(img1, briskKeypointsImg1, img2, briskKeypointsImg2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    # # save matched images
-    # cv.imwrite("src/FlannBrisk1.jpg", img_matches1_2)
+    FLANNmatcher = cv.DescriptorMatcher_create(cv.DescriptorMatcher_FLANNBASED)
 
-    # # Matching on images 1 and 3
-    # good_matches1_3 = []
-    # for m,n in knn_matches1_3:
-    #     if m.distance < ratio_thresh * n.distance:
-    #         good_matches1_3.append(m)
+    knn_matches1_2 = FLANNmatcher.knnMatch(orbDescriptorsImg1, orbDescriptorsImg2, 2)
+    knn_matches1_3 = FLANNmatcher.knnMatch(orbDescriptorsImg1, orbDescriptorsImg3, 2)
 
-    # img_matches1_3 = np.empty((max(img1.shape[0], img3.shape[0]), img1.shape[1]+img3.shape[1], 3), dtype=np.uint8)
-    # cv.drawMatches(img1, briskKeypointsImg1, img3, briskKeypointsImg3, good_matches1_3, img_matches1_3, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    # # save matched images
-    # cv.imwrite("src/FlannBrisk2.jpg", img_matches1_3)
+    ratio_thresh = 0.7
 
+    #Matching on images 1 and 2.
+    good_matches1_2 = []
+    for m,n in knn_matches1_2:
+        if m.distance < ratio_thresh * n.distance:
+            good_matches1_2.append(m)
+
+    img_matches1_2 = np.empty((max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], 3), dtype=np.uint8)
+    cv.drawMatches(img1, orbKeypoints1, img2, orbKeypoints2, good_matches1_2, img_matches1_2, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    # save matched images
+    cv.imwrite("src/OrbFlann1.jpg", img_matches1_2)
+
+    #Matching on images 1 and 3.
+    good_matches1_3 = []
+    for m,n in knn_matches1_3:
+        if m.distance < ratio_thresh * n.distance:
+            good_matches1_3.append(m)
+
+    img_matches1_3 = np.empty((max(img1.shape[0], img3.shape[0]), img1.shape[1]+img3.shape[1], 3), dtype=np.uint8)
+    cv.drawMatches(img1, orbKeypoints1, img3, orbKeypoints3, good_matches1_3, img_matches1_3, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    # save matched images
+    cv.imwrite("src/OrbFlann2.jpg", img_matches1_3)
 
 
 def GetSIFTKeypointsAndDescriptors(img):
@@ -130,36 +142,13 @@ def GetSIFTKeypointsAndDescriptors(img):
     return sift.detectAndCompute(imggray, None)
 
 def getBRISKKeypointsAndDesciptors(img):
-    # imggray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    BRISK = cv.BRISK_create()
-    return BRISK.detectAndCompute(img, None)
-
-def getFastKeypointsAndDesciptors(img):
     imggray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    fast = cv.FastFeatureDetector_create()
-    return fast.detectAndCompute(imggray, None)
+    BRISK = cv.BRISK_create()
+    return BRISK.detectAndCompute(imggray, None)
 
-# def BRISK():
-#     img = cv.imread("src/ball1.jpg")
-#     imggray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-#     brisk = cv.BRISK_create()
-#     # Secont parameter is option mask to pass function
-#     kp = brisk.detect(imggray, None)
-#     img = drawKeypoints(img, kp, outImage=None)
-#     cv.imshow("image", img)
-#     cv.imwrite("src/ball1BRISK.jpg", img)
-#     cv.waitKey();
-
-# def FAST():
-#     origimg = cv.imread("src/ball1.jpg")
-#     img = cv.cvtColor(origimg, cv.COLOR_BGR2GRAY)
-#     fast = cv.FastFeatureDetector_create()
-#     # Secont parameter is option mask to pass function
-#     kp = fast.detect(img, None)
-#     img = drawKeypoints(origimg, kp, outImage=None)
-#     cv.imshow("image", img)
-#     cv.imwrite("src/ball1FAST.jpg", img)
-#     cv.waitKey();
+def getOrbKeypointsAndDescriptors(img):
+    orb = cv.ORB_create()
+    return orb.detectAndCompute(img, None)
 
 if __name__ == "__main__":
     main()
