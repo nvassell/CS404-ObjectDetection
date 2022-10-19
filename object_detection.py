@@ -2,10 +2,10 @@
 Flann based matching - https://docs.opencv.org/3.4/d5/d6f/tutorial_feature_flann_matcher.html
 BF base matching - https://docs.opencv.org/4.x/dc/dc3/tutorial_py_matcher.html
 More feature matching - https://opencv24-python-tutorials.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_matcher/py_matcher.html
+https://stackoverflow.com/questions/39940766/bfmatcher-match-in-opencv-throwing-error
 """
 
 import cv2 as cv
-from cv2 import drawKeypoints
 from matplotlib import pyplot as plt
 
 import numpy as np
@@ -18,7 +18,8 @@ def main():
 
     # SiftFlann(img1, img2, img3)
     # BriskFlann(img1, img2, img3)
-    OrbFlann(img1, img2, img3)
+    # OrbFlann(img1, img2, img3)
+    SiftBF(img1, img2, img3)
 
 
 def SiftFlann(img1, img2, img3):
@@ -134,6 +135,28 @@ def OrbFlann(img1, img2, img3):
     cv.drawMatches(img1, orbKeypoints1, img3, orbKeypoints3, good_matches1_3, img_matches1_3, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     # save matched images
     cv.imwrite("src/OrbFlann2.jpg", img_matches1_3)
+
+def SiftBF(img1, img2, img3):
+    # get imagge keypoints and descriptors with Sift.
+    siftKeypointsImg1, siftDescriptorsImg1 = GetSIFTKeypointsAndDescriptors(img1)
+    siftKeypointsImg2, siftDescriptorsImg2 = GetSIFTKeypointsAndDescriptors(img2)
+    siftKeypointsImg3, siftDescriptorsImg3 = GetSIFTKeypointsAndDescriptors(img3)
+
+    bf = cv.BFMatcher(cv.NORM_L1,crossCheck=False)
+    matches1_2 = bf.match(siftDescriptorsImg1, siftDescriptorsImg2)
+    matches1_3 = bf.match(siftDescriptorsImg1, siftDescriptorsImg3)
+
+    # Sort them in the order of their distance.
+    matches1_2 = sorted(matches1_2, key = lambda x:x.distance)
+    matches1_3 = sorted(matches1_3, key = lambda x:x.distance)
+
+    # Draw first 10 matches.
+    image1_2 = cv.drawMatches(img1,siftKeypointsImg1,img2,siftKeypointsImg2,matches1_2[:20],None,flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    image1_3 = cv.drawMatches(img1,siftKeypointsImg1,img3,siftKeypointsImg3,matches1_3[:20],None,flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+
+    # Save the images :)
+    cv.imwrite("src/BFSift1.jpg", image1_2)
+    cv.imwrite("src/BFSift2.jpg", image1_3)
 
 
 def GetSIFTKeypointsAndDescriptors(img):
